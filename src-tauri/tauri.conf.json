@@ -5,7 +5,9 @@
   "identifier": "com.chatgpt-mcp-fs.dev",
   "build": {
     "frontendDist": "../src/dist",
-    "devUrl": "http://localhost:5173"
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "pnpm build:server && pnpm dev",
+    "beforeBuildCommand": "pnpm build:server && pnpm build:frontend"
   },
   "app": {
     "withGlobalTauri": true,
@@ -35,7 +37,9 @@
       "icons/icon.ico",
       "icons/icon.png"
     ],
-    "resources": [],
+    "resources": {
+      "../packages/mcp-server/dist": "packages/mcp-server/dist"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser",

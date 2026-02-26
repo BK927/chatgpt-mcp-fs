@@ -1,9 +1,9 @@
 import type { ServerConfig } from '@chatgpt-mcp-fs/shared';
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// In bundled CJS, __dirname is available. If not, use process.cwd()
+const __dirname = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 
 const DEFAULT_CONFIG: ServerConfig = {
   port: 3000,

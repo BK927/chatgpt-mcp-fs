@@ -63,7 +63,9 @@ pub async fn start_server(
         .map(|p| p.join("packages").join("mcp-server").join("dist").join("index.js"))
         .map_err(|e| e.to_string())?;
 
+    // On Windows, strip the \\?\ prefix which Node.js doesn't handle well
     let server_path_str = server_path.to_string_lossy().to_string();
+    let server_path_str = server_path_str.strip_prefix("\\\\?\\").unwrap_or(&server_path_str).to_string();
 
     let (mut rx, child) = shell
         .command("node")
