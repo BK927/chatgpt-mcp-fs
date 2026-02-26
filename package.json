@@ -1,0 +1,23 @@
+{
+  "name": "chatgpt-mcp-fs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ChatGPT MCP File System Server with Tauri GUI",
+  "scripts": {
+    "dev": "pnpm --filter @chatgpt-mcp-fs/frontend dev",
+    "build": "pnpm -r build",
+    "build:server": "pnpm --filter @chatgpt-mcp-fs/server build",
+    "build:frontend": "pnpm --filter @chatgpt-mcp-fs/frontend build",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "inspector": "npx @modelcontextprotocol/inspector node packages/mcp-server/dist/index.js"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

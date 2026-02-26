@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__web-reader__webReader",
+      "mcp__web-search-prime__webSearchPrime",
+      "Bash(cd:*)",
+      "Bash(rustc:*)",
+      "Bash(cd /c/Users/dead4/mcp/chatgpt-mcp-fs/src-tauri && cargo check 2>&1)",
+      "Bash(echo Icon generation failed, will create manually:*)",
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/dead4/mcp/chatgpt-mcp-fs/src && pnpm build 2>&1)",
+      "Bash(cd /c/Users/dead4/mcp/chatgpt-mcp-fs && pnpm tauri build --debug 2>&1)",
+      "Bash(echo Inspector test completed:*)",
+      "Bash(echo Test completed:*)"
+    ]
+  }
+}
