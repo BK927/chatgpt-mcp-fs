@@ -30,6 +30,7 @@ export class SimpleClientsStore implements OAuthRegisteredClientsStore {
         'http://localhost:3000/callback',
         'http://127.0.0.1:8080/callback',
         'http://127.0.0.1:3000/callback',
+        'https://chatgpt.com/connector_platform_oauth_redirect',
       ],
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
