@@ -2,7 +2,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
+import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { z } from 'zod';
+import express from 'express';
 import http from 'http';
 import { getConfig, initConfig } from './config/index.js';
 import { readFile, readFileSchema } from './tools/readFile.js';
@@ -14,10 +17,12 @@ import { deleteDirectory, deleteDirectorySchema } from './tools/deleteDirectory.
 import { moveFile, moveFileSchema } from './tools/moveFile.js';
 import { copyFile, copyFileSchema } from './tools/copyFile.js';
 import { searchFiles, searchFilesSchema } from './tools/searchFiles.js';
+import { SimpleOAuthProvider } from './auth.js';
 
 export interface MCPServerOptions {
   transport?: 'stdio' | 'http' | 'sse';
   port?: number;
+  issuerUrl?: string;
 }
 
 // Define Zod shapes for MCP SDK
@@ -77,12 +82,16 @@ export class MCPFileServer {
   private server: McpServer;
   private httpServer?: http.Server;
   private options: MCPServerOptions;
+  private oauthProvider: SimpleOAuthProvider;
 
   constructor(options: MCPServerOptions = {}) {
     this.options = {
       transport: options.transport || 'stdio',
       port: options.port || 3000,
+      issuerUrl: options.issuerUrl,
     };
+
+    this.oauthProvider = new SimpleOAuthProvider();
 
     this.server = new McpServer({
       name: 'chatgpt-mcp-fs',
@@ -287,40 +296,68 @@ export class MCPFileServer {
 
   private async startSseServer(): Promise<void> {
     const port = this.options.port || 3000;
+    const app = express();
     const transports = new Map<string, SSEServerTransport>();
 
-    this.httpServer = http.createServer(async (req, res) => {
-      const url = new URL(req.url || '/', `http://localhost:${port}`);
+    // Parse JSON bodies
+    app.use(express.json());
 
-      if (url.pathname === '/sse' && req.method === 'GET') {
-        const transport = new SSEServerTransport('/message', res);
-        transports.set(transport.sessionId, transport);
+    // Add OAuth routes - use custom issuer URL if provided (for ngrok, etc.)
+    const issuerUrl = this.options.issuerUrl
+      ? new URL(this.options.issuerUrl)
+      : new URL(`http://localhost:${port}`);
 
-        res.on('close', () => {
-          transports.delete(transport.sessionId);
-        });
+    app.use(mcpAuthRouter({
+      provider: this.oauthProvider,
+      issuerUrl,
+      scopesSupported: ['mcp:tools'],
+    }));
 
-        await this.server.connect(transport);
-      } else if (url.pathname === '/message' && req.method === 'POST') {
-        const sessionId = url.searchParams.get('sessionId');
-        if (!sessionId || !transports.has(sessionId)) {
-          res.statusCode = 400;
-          res.end('Invalid session');
-          return;
-        }
+    // Endpoint to get pre-generated OAuth credentials (no auth required)
+    app.get('/credentials', (req, res) => {
+      const creds = this.oauthProvider.getPreGeneratedCredentials();
+      res.json({
+        client_id: creds.clientId,
+        client_secret: creds.clientSecret,
+        issuer_url: issuerUrl.origin,
+        sse_endpoint: `${issuerUrl.origin}/sse`,
+      });
+    });
 
-        const transport = transports.get(sessionId)!;
-        await transport.handlePostMessage(req, res);
-      } else {
-        res.statusCode = 404;
-        res.end('Not found');
+    // SSE endpoint with bearer auth
+    app.get('/sse', requireBearerAuth({
+      provider: this.oauthProvider,
+    }), async (req, res) => {
+      const transport = new SSEServerTransport('/message', res);
+      transports.set(transport.sessionId, transport);
+
+      res.on('close', () => {
+        transports.delete(transport.sessionId);
+      });
+
+      await this.server.connect(transport);
+    });
+
+    // Message endpoint with bearer auth
+    app.post('/message', requireBearerAuth({
+      provider: this.oauthProvider,
+    }), async (req, res) => {
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId || !transports.has(sessionId)) {
+        res.status(400).json({ error: 'Invalid session' });
+        return;
       }
+
+      const transport = transports.get(sessionId)!;
+      await transport.handlePostMessage(req, res);
     });
 
     return new Promise((resolve) => {
-      this.httpServer!.listen(port, () => {
+      this.httpServer = app.listen(port, () => {
         console.error(`MCP server started (SSE transport) on port ${port}`);
-        console.error(`SSE endpoint: http://localhost:${port}/sse`);
+        console.error(`SSE endpoint: ${issuerUrl.origin}/sse`);
+        console.error(`OAuth issuer: ${issuerUrl.origin}`);
+        console.error(`Credentials endpoint: http://localhost:${port}/credentials`);
         resolve();
       });
     });

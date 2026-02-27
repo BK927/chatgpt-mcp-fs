@@ -9,11 +9,18 @@ export default function ServerStatus() {
     try {
       setLoading(true);
       setError(null);
-      await invoke('start_server', { port: config.port });
+
+      // Pass issuer URL if ngrok is enabled and URL is set
+      const issuerUrl = config.ngrok_enabled && config.ngrok_url ? config.ngrok_url : null;
+
+      await invoke('start_server', {
+        port: config.port,
+        issuerUrl: issuerUrl
+      });
       addLog({
         timestamp: new Date().toISOString(),
         level: 'info',
-        message: `Starting server on port ${config.port}...`,
+        message: `Starting server on port ${config.port}${issuerUrl ? ` with issuer ${issuerUrl}` : ''}...`,
       });
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);

@@ -18,6 +18,7 @@ export interface AppConfig {
   allowed_folders: string[];
   auto_start: boolean;
   ngrok_enabled: boolean;
+  ngrok_url: string;
 }
 
 interface AppState {
@@ -53,6 +54,7 @@ export const useAppStore = create<AppState>((set) => ({
     allowed_folders: [],
     auto_start: false,
     ngrok_enabled: false,
+    ngrok_url: '',
   },
   isLoading: false,
   error: null,

@@ -9,6 +9,7 @@ pub struct AppConfig {
     pub allowed_folders: Vec<String>,
     pub auto_start: bool,
     pub ngrok_enabled: bool,
+    pub ngrok_url: Option<String>,
 }
 
 impl Default for AppConfig {
@@ -18,6 +19,7 @@ impl Default for AppConfig {
             allowed_folders: vec![],
             auto_start: false,
             ngrok_enabled: false,
+            ngrok_url: None,
         }
     }
 }

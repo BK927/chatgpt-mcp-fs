@@ -1,6 +1,7 @@
 mod commands;
 
 use commands::{ServerState, get_config, get_server_status, pick_folder, save_config, start_server, stop_server, update_port, validate_folder_path};
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -18,6 +19,23 @@ pub fn run() {
             pick_folder,
             validate_folder_path,
         ])
+        .on_window_event(|window, event| {
+            // Clean up server process when window is closed
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let state = window.state::<ServerState>();
+                let child = state.child.clone();
+
+                // Spawn a blocking task to kill the server process
+                std::thread::spawn(move || {
+                    // Use block_on to handle the async mutex
+                    if let Ok(mut child_guard) = child.try_lock() {
+                        if let Some(child_process) = child_guard.take() {
+                            let _ = child_process.kill();
+                        }
+                    }
+                });
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

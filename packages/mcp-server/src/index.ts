@@ -9,10 +9,12 @@ async function main(): Promise<void> {
   const transportIndex = args.indexOf('--transport');
   const portIndex = args.indexOf('--port');
   const configIndex = args.indexOf('--config');
+  const issuerUrlIndex = args.indexOf('--issuer-url');
 
   const transport = transportIndex !== -1 ? args[transportIndex + 1] : 'stdio';
   const port = portIndex !== -1 ? parseInt(args[portIndex + 1], 10) : 3000;
   const configPath = configIndex !== -1 ? args[configIndex + 1] : undefined;
+  const issuerUrl = issuerUrlIndex !== -1 ? args[issuerUrlIndex + 1] : undefined;
 
   // Initialize config
   await initConfig(configPath);
@@ -21,6 +23,7 @@ async function main(): Promise<void> {
   const server = await createServer({
     transport: transport as 'stdio' | 'http' | 'sse',
     port,
+    issuerUrl,
   });
 
   await server.start();

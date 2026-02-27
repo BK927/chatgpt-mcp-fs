@@ -47,6 +47,7 @@ pub async fn start_server(
     app: tauri::AppHandle,
     state: tauri::State<'_, ServerState>,
     port: u16,
+    issuer_url: Option<String>,
 ) -> Result<(), String> {
     let mut status = state.status.lock().await;
 
@@ -67,15 +68,24 @@ pub async fn start_server(
     let server_path_str = server_path.to_string_lossy().to_string();
     let server_path_str = server_path_str.strip_prefix("\\\\?\\").unwrap_or(&server_path_str).to_string();
 
+    // Build command arguments
+    let mut args = vec![
+        server_path_str,
+        "--transport".to_string(),
+        "sse".to_string(),
+        "--port".to_string(),
+        port.to_string(),
+    ];
+
+    // Add issuer URL if provided (for ngrok, etc.)
+    if let Some(ref url) = issuer_url {
+        args.push("--issuer-url".to_string());
+        args.push(url.clone());
+    }
+
     let (mut rx, child) = shell
         .command("node")
-        .args([
-            &server_path_str,
-            "--transport",
-            "sse",
-            "--port",
-            &port.to_string(),
-        ])
+        .args(&args)
         .spawn()
         .map_err(|e| format!("Failed to start server: {}", e))?;
 
