@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore, initializeEventListeners } from './store';
 import ServerStatus from './components/ServerStatus';
@@ -17,6 +17,22 @@ function App() {
     // Load initial config
     loadConfig();
   }, []);
+
+  // Save config to backend whenever it changes
+  const saveConfig = useCallback(async (newConfig: typeof config) => {
+    try {
+      await invoke('save_config', { config: newConfig });
+    } catch (err) {
+      console.error('Failed to save config:', err);
+    }
+  }, []);
+
+  // Update config and save to disk
+  const updateConfig = useCallback((updates: Partial<typeof config>) => {
+    const newConfig = { ...config, ...updates };
+    setConfig(newConfig);
+    saveConfig(newConfig);
+  }, [config, setConfig, saveConfig]);
 
   async function loadConfig() {
     try {
@@ -75,7 +91,7 @@ function App() {
                   <input
                     type="number"
                     value={config.port}
-                    onChange={(e) => setConfig({ ...config, port: parseInt(e.target.value, 10) || 3000 })}
+                    onChange={(e) => updateConfig({ port: parseInt(e.target.value, 10) || 3000 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     min={1024}
                     max={65535}
@@ -88,7 +104,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={config.auto_start}
-                      onChange={(e) => setConfig({ ...config, auto_start: e.target.checked })}
+                      onChange={(e) => updateConfig({ auto_start: e.target.checked })}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
@@ -96,12 +112,12 @@ function App() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Enable Ngrok tunnel</span>
+                  <span className="text-sm text-gray-700">Enable Ngrok tunnel (auto)</span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={config.ngrok_enabled}
-                      onChange={(e) => setConfig({ ...config, ngrok_enabled: e.target.checked })}
+                      onChange={(e) => updateConfig({ ngrok_enabled: e.target.checked })}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
@@ -109,21 +125,9 @@ function App() {
                 </div>
 
                 {config.ngrok_enabled && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ngrok URL
-                    </label>
-                    <input
-                      type="text"
-                      value={config.ngrok_url || ''}
-                      onChange={(e) => setConfig({ ...config, ngrok_url: e.target.value })}
-                      placeholder="https://xxxx.ngrok-free.app"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Enter your ngrok URL (e.g., https://xxxx.ngrok-free.app)
-                    </p>
-                  </div>
+                  <p className="text-xs text-gray-500">
+                    Ngrok will start automatically when server starts. Make sure ngrok is installed and in PATH.
+                  </p>
                 )}
               </div>
             </div>

@@ -5,6 +5,8 @@ export interface ServerStatus {
   running: boolean;
   port: number;
   pid?: number;
+  ngrok_running: boolean;
+  ngrok_url: string | null;
 }
 
 export interface LogEntry {
@@ -47,6 +49,8 @@ export const useAppStore = create<AppState>((set) => ({
   serverStatus: {
     running: false,
     port: 3000,
+    ngrok_running: false,
+    ngrok_url: null,
   },
   logs: [],
   config: {

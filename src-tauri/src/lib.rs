@@ -20,17 +20,24 @@ pub fn run() {
             validate_folder_path,
         ])
         .on_window_event(|window, event| {
-            // Clean up server process when window is closed
+            // Clean up server and ngrok processes when window is closed
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 let state = window.state::<ServerState>();
                 let child = state.child.clone();
+                let ngrok_child = state.ngrok_child.clone();
 
-                // Spawn a blocking task to kill the server process
+                // Spawn a blocking task to kill the processes
                 std::thread::spawn(move || {
-                    // Use block_on to handle the async mutex
+                    // Kill server process
                     if let Ok(mut child_guard) = child.try_lock() {
                         if let Some(child_process) = child_guard.take() {
                             let _ = child_process.kill();
+                        }
+                    }
+                    // Kill ngrok process
+                    if let Ok(mut ngrok_guard) = ngrok_child.try_lock() {
+                        if let Some(ngrok_process) = ngrok_guard.take() {
+                            let _ = ngrok_process.kill();
                         }
                     }
                 });
