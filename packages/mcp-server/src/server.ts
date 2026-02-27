@@ -6,6 +6,7 @@ import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { z } from 'zod';
 import express from 'express';
+import cors from 'cors';
 import http from 'http';
 import { getConfig, initConfig } from './config/index.js';
 import { readFile, readFileSchema } from './tools/readFile.js';
@@ -307,6 +308,9 @@ export class MCPFileServer {
     const port = this.options.port || 3000;
     const app = express();
     const transports = new Map<string, SSEServerTransport>();
+
+    // Enable CORS for all routes
+    app.use(cors());
 
     // Parse JSON bodies
     app.use(express.json());

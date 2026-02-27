@@ -173,11 +173,19 @@ pub async fn start_server(
                 }
                 CommandEvent::Stderr(line) => {
                     let message = String::from_utf8_lossy(&line).to_string();
+
+                    // Check if message actually contains an error
+                    let level = if message.to_lowercase().contains("error") {
+                        "error"
+                    } else {
+                        "info"
+                    };
+
                     let _ = app_clone.emit(
                         "server:log",
                         LogEntry {
                             timestamp: chrono_lite_now(),
-                            level: "error".to_string(),
+                            level: level.to_string(),
                             message,
                         },
                     );

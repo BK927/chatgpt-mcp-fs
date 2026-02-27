@@ -26,8 +26,8 @@ export default function CredentialsCard() {
   async function fetchCredentials() {
     setLoading(true);
     try {
-      // Retry a few times in case server is still starting
-      for (let i = 0; i < 5; i++) {
+      // Retry a few times in case server is still starting (총 15초 대기)
+      for (let i = 0; i < 15; i++) {
         try {
           const response = await fetch(`http://localhost:${config.port}/credentials`);
           if (response.ok) {
@@ -42,8 +42,8 @@ export default function CredentialsCard() {
             return;
           }
         } catch {
-          // Wait and retry
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait and retry (1초 대기)
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     } catch (err) {
