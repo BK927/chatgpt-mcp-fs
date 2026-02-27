@@ -49,7 +49,16 @@ export async function deleteDirectory(
   if (params.recursive) {
     await fs.rm(validatedPath, { recursive: true, force: true });
   } else {
-    await fs.rmdir(validatedPath);
+    try {
+      await fs.rmdir(validatedPath);
+    } catch (error) {
+      if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOTEMPTY') {
+        throw new Error(
+          `Directory '${validatedPath}' is not empty. Use recursive: true to delete it and all its contents.`
+        );
+      }
+      throw error;
+    }
   }
 
   return `Successfully deleted directory: ${validatedPath}`;

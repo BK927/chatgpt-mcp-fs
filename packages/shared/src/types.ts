@@ -7,6 +7,11 @@ export interface ServerConfig {
   ngrokEnabled: boolean;
 }
 
+export interface ConfigInitResult {
+  config: ServerConfig;
+  isFirstRun: boolean;
+}
+
 export interface FolderConfig {
   path: string;
   alias?: string;

@@ -69,7 +69,17 @@ export async function moveFile(
   await fs.mkdir(destDir, { recursive: true });
 
   // Perform the move
-  await fs.rename(validatedSource, validatedDest);
+  try {
+    await fs.rename(validatedSource, validatedDest);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'EXDEV') {
+      // Cross-volume move: fallback to copy + delete
+      await fs.cp(validatedSource, validatedDest, { recursive: true });
+      await fs.rm(validatedSource, { recursive: true, force: true });
+    } else {
+      throw error;
+    }
+  }
 
   const type = sourceStats.isDirectory() ? 'directory' : 'file';
   return `Successfully moved ${type} from ${validatedSource} to ${validatedDest}`;

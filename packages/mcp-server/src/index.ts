@@ -17,7 +17,10 @@ async function main(): Promise<void> {
   const issuerUrl = issuerUrlIndex !== -1 ? args[issuerUrlIndex + 1] : undefined;
 
   // Initialize config
-  await initConfig(configPath);
+  const { isFirstRun } = await initConfig(configPath);
+  if (isFirstRun) {
+    console.error('First run detected: using default configuration');
+  }
 
   // Create and start server
   const server = await createServer({

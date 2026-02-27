@@ -17,7 +17,7 @@ export async function validatePath(
   allowedDirs: string[]
 ): Promise<string> {
   if (allowedDirs.length === 0) {
-    throw new PathValidationError('No allowed directories configured');
+    throw new PathValidationError('No folders have been configured for access. Please add at least one folder in the application settings before using file operations.');
   }
 
   // Resolve to absolute path
@@ -35,7 +35,7 @@ export async function validatePath(
       const realParent = await fs.realpath(parentDir);
       realPath = path.join(realParent, path.basename(normalizedPath));
     } catch {
-      throw new PathValidationError(`Path validation failed: parent directory does not exist`);
+        throw new PathValidationError(`Cannot access '${requestedPath}': the parent directory does not exist. Please verify the path is correct.`);
     }
   }
 
@@ -58,7 +58,7 @@ export async function validatePath(
   }
 
   throw new PathValidationError(
-    `Path '${requestedPath}' is not within allowed directories: ${allowedDirs.join(', ')}`
+    `Access denied: '${requestedPath}' is outside the allowed folders.\nAllowed folders:\n${allowedDirs.map(d => `  - ${d}`).join('\n')}\nTo access this path, add its parent folder to the allowed folders list.`
   );
 }
 
@@ -68,7 +68,7 @@ export async function validatePath(
  */
 export function validatePathSync(requestedPath: string, allowedDirs: string[]): string {
   if (allowedDirs.length === 0) {
-    throw new PathValidationError('No allowed directories configured');
+    throw new PathValidationError('No folders have been configured for access. Please add at least one folder in the application settings before using file operations.');
   }
 
   const resolvedPath = path.resolve(requestedPath);
@@ -81,7 +81,7 @@ export function validatePathSync(requestedPath: string, allowedDirs: string[]): 
 
   if (!isAllowed) {
     throw new PathValidationError(
-      `Path '${requestedPath}' is not within allowed directories: ${allowedDirs.join(', ')}`
+      `Access denied: '${requestedPath}' is outside the allowed folders.\nAllowed folders:\n${allowedDirs.map(d => `  - ${d}`).join('\n')}\nTo access this path, add its parent folder to the allowed folders list.`
     );
   }
 

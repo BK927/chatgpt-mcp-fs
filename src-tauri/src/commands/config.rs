@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -61,6 +61,9 @@ pub async fn save_config(app: tauri::AppHandle, config: AppConfig) -> Result<(),
 
     fs::write(&config_path, content)
         .map_err(|e| format!("Failed to write config: {}", e))?;
+
+    // Emit config:changed event for frontend handling
+    let _ = app.emit("config:changed", config.clone());
 
     // Also save to the MCP server's config location
     let server_config_path = app

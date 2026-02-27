@@ -119,6 +119,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] read_file:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -135,6 +136,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] write_file:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -151,6 +153,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] list_directory:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -167,6 +170,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] create_directory:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -183,6 +187,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] delete_file:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -199,6 +204,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] delete_directory:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -215,6 +221,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] move_file:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -231,6 +238,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: result }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] copy_file:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -247,6 +255,7 @@ export class MCPFileServer {
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          console.error('[MCP Tool Error] search_files:', error);
           return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
         }
       }
@@ -379,6 +388,9 @@ export class MCPFileServer {
 }
 
 export async function createServer(options?: MCPServerOptions): Promise<MCPFileServer> {
-  await initConfig();
+  const { isFirstRun } = await initConfig();
+  if (isFirstRun) {
+    console.error('First run detected: using default configuration');
+  }
   return new MCPFileServer(options);
 }

@@ -1,4 +1,4 @@
-import type { ServerConfig } from '@chatgpt-mcp-fs/shared';
+import type { ServerConfig, ConfigInitResult } from '@chatgpt-mcp-fs/shared';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -21,8 +21,9 @@ export function getConfig(): ServerConfig {
   return config;
 }
 
-export async function initConfig(configPath?: string): Promise<ServerConfig> {
+export async function initConfig(configPath?: string): Promise<ConfigInitResult> {
   const configFile = configPath || path.join(__dirname, '..', '..', 'config.json');
+  let isFirstRun = false;
 
   try {
     const data = await fs.readFile(configFile, 'utf-8');
@@ -31,9 +32,10 @@ export async function initConfig(configPath?: string): Promise<ServerConfig> {
   } catch {
     // Config file doesn't exist, use defaults
     config = { ...DEFAULT_CONFIG };
+    isFirstRun = true;
   }
 
-  return config!;
+  return { config: config!, isFirstRun };
 }
 
 export async function saveConfig(newConfig: Partial<ServerConfig>): Promise<void> {
